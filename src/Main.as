@@ -16,6 +16,7 @@ package
 		public function Main():void 
 		{
 			super(SCREEN_WIDTH, SCREEN_HEIGHT, 60, false);
+			this.paused = true;
 			runUnitTests();
 		}
 		

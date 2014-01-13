@@ -2,6 +2,7 @@ package tests
 {
 	import asunit.framework.TestCase;
 	import net.flashpunk.FP;
+	import net.flashpunk.Tween;
 	import net.flashpunk.tweens.misc.Alarm;
 	
 	/**
@@ -10,7 +11,7 @@ package tests
 	 */
 	public class TestAlarmFP extends TestCase 
 	{
-		private var alarmSetOff:Boolean = false;
+		private var alarmTriggerCount:int = 0;
 		
 		public function TestAlarmFP(testMethod:String=null) 
 		{
@@ -19,13 +20,34 @@ package tests
 			reset();
 		}
 		
-		public function testAlarmCallback():void {
-			var delayTimeInSeconds:Number = 2;
-			var alarm:Alarm = FP.alarm(delayTimeInSeconds, alarmComplete);
-			timePasses(delayTimeInSeconds / 2);
-			assertFalse("Alarm should not have triggered yet", alarmSetOff);
-			timePasses(delayTimeInSeconds * 9);
-			assertTrue("Alarm should have triggered", alarmSetOff);
+		public function testAlarmSingleCallback():void {
+			var durationInSeconds:Number = 200;
+			FP.alarm(durationInSeconds, alarmTriggered);
+			assertTrue("Trigger count should be 0", alarmTriggerCount == 0);
+			
+			timePasses(durationInSeconds / 2);
+			assertTrue("Alarm should not have triggered yet", alarmTriggerCount == 0);
+			
+			timePasses(durationInSeconds / 2);
+			assertTrue("Alarm should have triggered once", alarmTriggerCount == 1);
+			
+			reset();
+		}
+		
+		public function testAlarmLoopingCallback():void {
+			var durationInSeconds:Number = 500;
+			var alarm:Alarm = FP.alarm(durationInSeconds, alarmTriggered, Tween.LOOPING);
+			
+			timePasses(durationInSeconds);
+			assertTrue("Alarm should have triggered once", alarmTriggerCount == 1);
+			timePasses(durationInSeconds);
+			assertTrue("Alarm should have triggered twice", alarmTriggerCount == 2);
+			
+			timePasses(durationInSeconds);
+			timePasses(durationInSeconds);
+			timePasses(durationInSeconds);
+			assertTrue("Alarm should have triggered 5 times", alarmTriggerCount == 5);
+			
 			reset();
 		}
 		
@@ -38,12 +60,12 @@ package tests
 		private function reset():void 
 		{
 			FP.elapsed = 0;
-			alarmSetOff = false;
-			
+			FP.tweener.clearTweens();
+			alarmTriggerCount = 0;
 		}
 		
-		private function alarmComplete():void {
-			alarmSetOff = true;
+		private function alarmTriggered():void {
+			alarmTriggerCount++;
 		}
 		
 	}
