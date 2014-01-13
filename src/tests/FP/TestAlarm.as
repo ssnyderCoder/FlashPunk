@@ -1,19 +1,19 @@
-package tests 
+package tests.FP 
 {
 	import asunit.framework.TestCase;
 	import net.flashpunk.FP;
 	import net.flashpunk.Tween;
+	import net.flashpunk.Tweener;
 	import net.flashpunk.tweens.misc.Alarm;
 	
 	/**
-	 * ...
 	 * @author Sean Snyder
 	 */
-	public class TestAlarmFP extends TestCase 
+	public class TestAlarm extends TestCase 
 	{
 		private var alarmTriggerCount:int = 0;
 		
-		public function TestAlarmFP(testMethod:String=null) 
+		public function TestAlarm(testMethod:String=null) 
 		{
 			super(testMethod);
 			FP.timeInFrames = false;
@@ -36,7 +36,7 @@ package tests
 		
 		public function testAlarmLoopingCallback():void {
 			var durationInSeconds:Number = 500;
-			var alarm:Alarm = FP.alarm(durationInSeconds, alarmTriggered, Tween.LOOPING);
+			FP.alarm(durationInSeconds, alarmTriggered, Tween.LOOPING);
 			
 			timePasses(durationInSeconds);
 			assertTrue("Alarm should have triggered once", alarmTriggerCount == 1);
@@ -51,10 +51,25 @@ package tests
 			reset();
 		}
 		
-		private function timePasses(seconds:Number):void 
+		public function testAlarmWithTweener():void {
+			var durationInSeconds:Number = 500;
+			var tweener:Tweener = new Tweener();
+			FP.alarm(durationInSeconds, alarmTriggered, Tween.ONESHOT, tweener);
+			
+			timePasses(durationInSeconds / 2, tweener);
+			assertTrue("Alarm should not have triggered yet", alarmTriggerCount == 0);
+			
+			timePasses(durationInSeconds / 2, tweener);
+			assertTrue("Alarm should have triggered once", alarmTriggerCount == 1);
+			
+			reset();
+		}
+		
+		private function timePasses(seconds:Number, tweener:Tweener=null):void 
 		{
 			FP.elapsed += seconds;
 			FP.tweener.updateTweens();
+			if (tweener) tweener.updateTweens();
 		}
 		
 		private function reset():void 
