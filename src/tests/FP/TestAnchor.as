@@ -80,6 +80,16 @@ package tests.FP
 			assertTrue("Entity's angle from anchor should have changed", isAboutSameNumber(angleChange, rotateInDegrees));
 			var newDistance:Number = entity.distanceFrom(anchor);
 			assertTrue("Entity should be about same distance from anchor", isAboutSameNumber(prevDistance, newDistance));
+			
+			rotateInDegrees = 1;
+			var relativeRotation:Boolean = false;
+			prevDistance = entity.distanceFrom(anchor);
+			FP.rotateAround(entity, anchor, rotateInDegrees, relativeRotation);
+			var newRotation:Number = FP.angle(entity.x, entity.y, anchor.x, anchor.y);
+			assertTrue("Entity's angle to anchor should've been set as specified", isAboutSameNumber(rotateInDegrees, newRotation));
+			newDistance = entity.distanceFrom(anchor);
+			assertTrue("Entity should be about same distance from anchor", isAboutSameNumber(prevDistance, newDistance));
+			
 		}
 		
 		private function isAboutSameNumber(num1:Number, num2:Number):Boolean {
