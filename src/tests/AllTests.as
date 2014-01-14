@@ -2,7 +2,7 @@ package tests
 {
 	import asunit.framework.TestSuite;
 	import tests.FP.TestAlarm;
-	import tests.FP.TestAnchorTo;
+	import tests.FP.TestAnchor;
 	
 	/**
 	 * ...
@@ -15,7 +15,7 @@ package tests
 		{
 			super();
             addTest(new TestAlarm());
-			addTest(new TestAnchorTo());
+			addTest(new TestAnchor());
 		}
 		
 	}

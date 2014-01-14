@@ -9,10 +9,10 @@ package tests.FP
 	 * 
 	 * @author Sean Snyder
 	 */
-	public class TestAnchorTo extends TestCase 
+	public class TestAnchor extends TestCase 
 	{
 		
-		public function TestAnchorTo(testMethod:String=null) 
+		public function TestAnchor(testMethod:String=null) 
 		{
 			super(testMethod);
 		}
@@ -49,11 +49,15 @@ package tests.FP
 			var maxDistance:Number = 10;
 			var entityPrevX:Number = entity.x;
 			var entityPrevY:Number = entity.y;
+			var prevAngle:Number = FP.angle(entity.x, entity.y, anchor.x, anchor.y);
 			
 			FP.anchorTo(entity, anchor, maxDistance);
 			assertTrue("Entity should have changed x position since beyond max distance", entity.x != entityPrevX);
 			assertTrue("Entity should have changed y position since beyond max distance", entity.y != entityPrevY);
-			assertTrue("Entity should be about the max distance away from anchor", entity.distanceFrom(anchor) == maxDistance);
+			var newDistance:Number = entity.distanceFrom(anchor);
+			assertTrue("Entity should be about the max distance away from anchor", isAboutSameNumber(newDistance, maxDistance));
+			var newAngle:Number = FP.angle(entity.x, entity.y, anchor.x, anchor.y);
+			assertTrue("Entity should be about the same angle away from anchor", isAboutSameNumber(newAngle, prevAngle));
 			
 			anchor.moveBy(-1, -1);
 			entity.moveBy(1, 1);
@@ -62,6 +66,24 @@ package tests.FP
 			FP.anchorTo(entity, anchor, maxDistance);
 			assertTrue("Entity should not have changed x position since within max distance", entity.x == entityPrevX);
 			assertTrue("Entity should not have changed y position since within max distance", entity.y == entityPrevY);
+		}
+		
+		public function testAnchorRotation():void {
+			var entity:Entity = new Entity(0, 0);
+			var anchor:Entity = new Entity(10, 10);
+			var prevAngleInDegrees:Number = FP.angle(entity.x, entity.y, anchor.x, anchor.y);
+			var prevDistance:Number = entity.distanceFrom(anchor);
+			var rotateInDegrees:Number = 180;
+			
+			FP.rotateAround(entity, anchor, rotateInDegrees);
+			var angleChange:Number = Math.abs(prevAngleInDegrees - FP.angle(entity.x, entity.y, anchor.x, anchor.y));
+			assertTrue("Entity's angle from anchor should have changed", isAboutSameNumber(angleChange, rotateInDegrees));
+			var newDistance:Number = entity.distanceFrom(anchor);
+			assertTrue("Entity should be about same distance from anchor", isAboutSameNumber(prevDistance, newDistance));
+		}
+		
+		private function isAboutSameNumber(num1:Number, num2:Number):Boolean {
+			return Math.abs(num1 - num2) < 0.1;
 		}
 	}
 
