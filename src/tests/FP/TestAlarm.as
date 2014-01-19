@@ -11,6 +11,7 @@ package tests.FP
 	 */
 	public class TestAlarm extends TestCase 
 	{
+		private static const DURATION_IN_SECONDS:int = 200;
 		private var alarmTriggerCount:int = 0;
 		
 		public function TestAlarm(testMethod:String=null) 
@@ -20,49 +21,42 @@ package tests.FP
 			reset();
 		}
 		
-		public function testAlarmSingleCallback():void {
-			var durationInSeconds:Number = 200;
-			FP.alarm(durationInSeconds, alarmTriggered);
-			assertTrue("Trigger count should be 0", alarmTriggerCount == 0);
-			
-			timePasses(durationInSeconds / 2);
+		public function testAlarmWhenNoTimePasses():void {
+			setupAlarm();
+			timePasses(0);
+			assertTrue("Alarm should not have triggered", alarmTriggerCount == 0);
+		}
+		
+		public function testAlarmWhenNotEnoughTimePasses():void {
+			setupAlarm();
+			timePasses(DURATION_IN_SECONDS / 2);
 			assertTrue("Alarm should not have triggered yet", alarmTriggerCount == 0);
-			
-			timePasses(durationInSeconds / 2);
-			assertTrue("Alarm should have triggered once", alarmTriggerCount == 1);
-			
-			reset();
+		}
+		
+		public function testAlarmWhenEnoughTimePasses():void {
+			setupAlarm();
+			timePasses(DURATION_IN_SECONDS);
+			assertTrue("Alarm should have triggered", alarmTriggerCount == 1);
 		}
 		
 		public function testAlarmLoopingCallback():void {
-			var durationInSeconds:Number = 500;
-			FP.alarm(durationInSeconds, alarmTriggered, Tween.LOOPING);
+			setupAlarm(null, Tween.LOOPING);
 			
-			timePasses(durationInSeconds);
+			timePasses(DURATION_IN_SECONDS);
 			assertTrue("Alarm should have triggered once", alarmTriggerCount == 1);
-			timePasses(durationInSeconds);
+			timePasses(DURATION_IN_SECONDS);
 			assertTrue("Alarm should have triggered twice", alarmTriggerCount == 2);
-			
-			timePasses(durationInSeconds);
-			timePasses(durationInSeconds);
-			timePasses(durationInSeconds);
-			assertTrue("Alarm should have triggered 5 times", alarmTriggerCount == 5);
-			
-			reset();
 		}
 		
 		public function testAlarmWithTweener():void {
-			var durationInSeconds:Number = 500;
 			var tweener:Tweener = new Tweener();
-			FP.alarm(durationInSeconds, alarmTriggered, Tween.ONESHOT, tweener);
+			setupAlarm(tweener);
 			
-			timePasses(durationInSeconds / 2, tweener);
+			timePasses(DURATION_IN_SECONDS / 2, tweener);
 			assertTrue("Alarm should not have triggered yet", alarmTriggerCount == 0);
 			
-			timePasses(durationInSeconds / 2, tweener);
+			timePasses(DURATION_IN_SECONDS / 2, tweener);
 			assertTrue("Alarm should have triggered once", alarmTriggerCount == 1);
-			
-			reset();
 		}
 		
 		private function timePasses(seconds:Number, tweener:Tweener=null):void 
@@ -70,6 +64,12 @@ package tests.FP
 			FP.elapsed += seconds;
 			FP.tweener.updateTweens();
 			if (tweener) tweener.updateTweens();
+		}
+		
+		private function setupAlarm(tweener:Tweener=null,type:int=Tween.ONESHOT):void 
+		{
+			reset();
+			FP.alarm(DURATION_IN_SECONDS, alarmTriggered, type, tweener);
 		}
 		
 		private function reset():void 

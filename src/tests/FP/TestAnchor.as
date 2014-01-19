@@ -12,88 +12,102 @@ package tests.FP
 	public class TestAnchor extends TestCase 
 	{
 		
+		private var entity:Entity;
+		private var anchor:Entity;
 		public function TestAnchor(testMethod:String=null) 
 		{
 			super(testMethod);
 		}
 		
 		public function testBasicAnchoring():void {
-			var entity:Entity = new Entity(0, 0);
-			var anchor:Entity = new Entity(10, 10);
+			setupEntities();
 			
 			FP.anchorTo(entity, anchor);
-			assertTrue("Entity should have same x position as Anchor", entity.x == anchor.x);
-			assertTrue("Entity should have same y position as Anchor", entity.y == anchor.y);
+			var hasSamePos:Boolean = entity.x == anchor.x && entity.y == anchor.y;
+			assertTrue("Entity should have same position as Anchor", hasSamePos);
+		}
+		
+		public function testAnchorMovingAfterAnchoring():void {
+			setupEntities();
+			FP.anchorTo(entity, anchor);
 			
 			anchor.moveBy(5, 5);
-			assertTrue("Anchor should have changed x position", entity.x != anchor.x);
-			assertTrue("Anchor should have changed y position", entity.y != anchor.y);
-			
+			var hasChangedPos:Boolean = entity.x != anchor.x || entity.y != anchor.y;
+			assertTrue("Anchor should have changed position", hasChangedPos);
+		}
+		
+		public function testEntityMovingAfterAnchoring():void {
+			setupEntities();
 			FP.anchorTo(entity, anchor);
-			assertTrue("Entity should have same x position as Anchor", entity.x == anchor.x);
-			assertTrue("Entity should have same y position as Anchor", entity.y == anchor.y);
 			
 			entity.moveBy(5, 5);
-			assertTrue("Entity should have changed x position", entity.x != anchor.x);
-			assertTrue("Entity should have changed y position", entity.y != anchor.y);
-			
-			
-			FP.anchorTo(entity, anchor);
-			assertTrue("Entity should have same x position as Anchor", entity.x == anchor.x);
-			assertTrue("Entity should have same y position as Anchor", entity.y == anchor.y);
+			var hasChangedPos:Boolean = entity.x != anchor.x || entity.y != anchor.y;
+			assertTrue("Entity should have changed position", hasChangedPos);
 		}
 		
-		public function testAnchoringWithDistance():void {
-			var entity:Entity = new Entity(0, 0);
-			var anchor:Entity = new Entity(100, 100);
-			var maxDistance:Number = 10;
+		public function testAnchoringOutsideMaxRange():void {
+			setupEntities();
+			var maxRange:Number = 10;
 			var entityPrevX:Number = entity.x;
 			var entityPrevY:Number = entity.y;
-			var prevAngle:Number = FP.angle(entity.x, entity.y, anchor.x, anchor.y);
+			var prevAngle:Number = FP.angle(anchor.x, anchor.y, entity.x, entity.y);
 			
-			FP.anchorTo(entity, anchor, maxDistance);
-			assertTrue("Entity should have changed x position since beyond max distance", entity.x != entityPrevX);
-			assertTrue("Entity should have changed y position since beyond max distance", entity.y != entityPrevY);
+			FP.anchorTo(entity, anchor, maxRange);
+			var hasChangedPos:Boolean = entity.x != entityPrevX || entity.y != entityPrevY;
 			var newDistance:Number = entity.distanceFrom(anchor);
-			assertTrue("Entity should be about the max distance away from anchor", isAboutSameNumber(newDistance, maxDistance));
-			var newAngle:Number = FP.angle(entity.x, entity.y, anchor.x, anchor.y);
-			assertTrue("Entity should be about the same angle away from anchor", isAboutSameNumber(newAngle, prevAngle));
-			
-			anchor.moveBy(-1, -1);
-			entity.moveBy(1, 1);
-			entityPrevX = entity.x;
-			entityPrevY = entity.y;
-			FP.anchorTo(entity, anchor, maxDistance);
-			assertTrue("Entity should not have changed x position since within max distance", entity.x == entityPrevX);
-			assertTrue("Entity should not have changed y position since within max distance", entity.y == entityPrevY);
+			var newAngle:Number = FP.angle(anchor.x, anchor.y, entity.x, entity.y);
+			assertTrue("Entity should have changed position since beyond max range", hasChangedPos);
+			assertTrue("Entity should now be within range of anchor", isAboutSameNumber(newDistance, maxRange));
+			assertTrue("Entity should be about the same angle from anchor", isAboutSameNumber(newAngle, prevAngle));
 		}
 		
-		public function testAnchorRotation():void {
-			var entity:Entity = new Entity(0, 0);
-			var anchor:Entity = new Entity(10, 10);
-			var prevAngleInDegrees:Number = FP.angle(entity.x, entity.y, anchor.x, anchor.y);
+		public function testAnchoringWithinMaxRange():void {
+			setupEntities();
+			entity.moveTo(anchor.x, anchor.y);
+			var maxRange:Number = 10;
+			var entityPrevX:Number = entity.x;
+			var entityPrevY:Number = entity.y;
+			
+			FP.anchorTo(entity, anchor, maxRange);
+			var hasSamePos:Boolean = entity.x == entityPrevX && entity.y == entityPrevY;
+			assertTrue("Entity should not have changed position since within max range", hasSamePos);
+		}
+		
+		public function testRelativeAnchorRotation():void {
+			setupEntities();
+			var prevAngleInDegrees:Number = FP.angle(anchor.x, anchor.y, entity.x, entity.y);
 			var prevDistance:Number = entity.distanceFrom(anchor);
 			var rotateInDegrees:Number = 180;
 			
 			FP.rotateAround(entity, anchor, rotateInDegrees);
-			var angleChange:Number = Math.abs(prevAngleInDegrees - FP.angle(entity.x, entity.y, anchor.x, anchor.y));
-			assertTrue("Entity's angle from anchor should have changed", isAboutSameNumber(angleChange, rotateInDegrees));
+			var angleChange:Number = Math.abs(prevAngleInDegrees - FP.angle(anchor.x, anchor.y, entity.x, entity.y));
 			var newDistance:Number = entity.distanceFrom(anchor);
+			assertTrue("Entity's angle from anchor should have changed", isAboutSameNumber(angleChange, rotateInDegrees));
 			assertTrue("Entity should be about same distance from anchor", isAboutSameNumber(prevDistance, newDistance));
+		}
+		
+		public function testAbsoluteAnchorRotation():void {
+			setupEntities();
+			var prevDistance:Number = entity.distanceFrom(anchor);
+			var rotateInDegrees:Number = 1;
+			var usingRelativeRotation:Boolean = false;
 			
-			rotateInDegrees = 1;
-			var relativeRotation:Boolean = false;
-			prevDistance = entity.distanceFrom(anchor);
-			FP.rotateAround(entity, anchor, rotateInDegrees, relativeRotation);
-			var newRotation:Number = FP.angle(entity.x, entity.y, anchor.x, anchor.y);
+			FP.rotateAround(entity, anchor, rotateInDegrees, usingRelativeRotation);
+			var newRotation:Number = FP.angle(anchor.x, anchor.y, entity.x, entity.y);
+			var newDistance = entity.distanceFrom(anchor);
 			assertTrue("Entity's angle to anchor should've been set as specified", isAboutSameNumber(rotateInDegrees, newRotation));
-			newDistance = entity.distanceFrom(anchor);
 			assertTrue("Entity should be about same distance from anchor", isAboutSameNumber(prevDistance, newDistance));
 			
 		}
 		
 		private function isAboutSameNumber(num1:Number, num2:Number):Boolean {
 			return Math.abs(num1 - num2) < 0.1;
+		}
+		
+		private function setupEntities():void 
+		{
+			entity = new Entity(0, 0);
+			anchor = new Entity(100, 1);
 		}
 	}
 
